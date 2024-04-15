@@ -1,0 +1,83 @@
+const readline = require('readline');
+const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+});
+
+function displayMenu() {
+    console.log("Welcome to Avery's Drink Shop");
+    console.log("Available Drinks and their base prices (small size):");
+    console.log("1. Coffee - $10");
+    console.log("2. Tea - $9");
+    console.log("3. Blue Drink - $8");
+    console.log("4. Red Drink - $8");
+    console.log("5. Water - Free");
+    console.log("\nSize options: S for Small, M for Medium (+$2), L for Large (+$4)");
+    console.log("Additions: Coffee/Tea - Cream, Sugar, Milk; Blue/Red Drink - Ice; Water - None.\n");
+}
+
+function getDrink(callback) {
+    rl.question("What would you like to order? (Choose: Coffee, Tea, Blue Drink, Red Drink, Water): ", drink => {
+        const options = {
+            'coffee': ['Cream', 'Sugar', 'Milk'],
+            'tea': ['Cream', 'Sugar', 'Milk'],
+            'blue drink': ['Ice'],
+            'red drink': ['Ice'],
+            'water': []
+        };
+        drink = drink.toLowerCase();
+        if (!(drink in options)) {
+            console.log("Invalid drink, please try again.");
+            return getDrink(callback);
+        }
+
+        getSize(drink, options[drink], callback);
+    });
+}
+
+function getSize(drink, additions, callback) {
+    rl.question("Choose your size (S, M, L): ", size => {
+        size = size.toUpperCase();
+        if (!['S', 'M', 'L'].includes(size)) {
+            console.log("Improper input, try again.");
+            return getSize(drink, additions, callback);
+        }
+
+        if (additions.length > 0) {
+            getAddition(drink, size, additions, callback);
+        } else {
+            callback(drink, size, 'none');
+        }
+    });
+}
+
+function getAddition(drink, size, additions, callback) {
+    rl.question(`Additions available (${additions.join(", ")}). Type 'none' for no additions: `, addition => {
+        addition = addition.toLowerCase();
+        if (addition !== 'none' && !additions.includes(addition)) {
+            console.log("Invalid addition, please try again.");
+            return getAddition(drink, size, additions, callback);
+        }
+        callback(drink, size, addition);
+    });
+}
+
+function calculatePrice(drink, size, addition) {
+    const prices = { 'coffee': 10, 'tea': 9, 'blue drink': 8, 'red drink': 8, 'water': 0 };
+    let basePrice = prices[drink] + (size === 'M' ? 2 : size === 'L' ? 4 : 0);
+    let tax = basePrice * 0.08;
+    let finalPrice = basePrice + tax;
+    console.log(`You ordered a ${size} ${drink} with ${addition === 'none' ? 'no additions' : addition}. Your total is: $${finalPrice.toFixed(2)}.`);
+}
+
+function main() {
+    displayMenu();
+    getDrink((drink, size, addition) => {
+        calculatePrice(drink, size, addition);
+        rl.close();
+    });
+}
+
+if (require.main === module) {
+    main();
+}
